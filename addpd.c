@@ -16,20 +16,15 @@ void add(double* a, double* b, double* c, size_t n)
 
 void addpd(double* a, double* b, double* c, size_t n)
 {
-    // Copy pointers
-    double* acp = a;
-    double* bcp = b;
-    double* ccp = c;
-
     for (size_t i = 0; i < n; ++i) {
-        const __m256d apd = _mm256_load_pd(acp);
-        const __m256d bpd = _mm256_load_pd(bcp);
+        const __m256d apd = _mm256_load_pd(a);
+        const __m256d bpd = _mm256_load_pd(b);
         const __m256d sum = _mm256_add_pd(apd, bpd);
-        _mm256_store_pd(ccp, sum);
+        _mm256_store_pd(c, sum);
 
-        acp += 4;
-        bcp += 4;
-        ccp += 4;
+        a += 4;
+        b += 4;
+        c += 4;
     }
 }
 
@@ -66,7 +61,6 @@ int main(int argc, char* argv[])
     srand(time(NULL));
 
     size_t n = atoi(argv[1]);
-    printf("%s\n", argv[1]);
     printf("Size of arrays: %zu\n", n);
 
     double a[n];
@@ -76,6 +70,9 @@ int main(int argc, char* argv[])
 
     randarr(a, n);
     randarr(b, n);
+
+    print(a, n);
+    print(b, n);
 
     time_t start, end;
     float seconds;
@@ -94,8 +91,6 @@ int main(int argc, char* argv[])
 
     printf("%d\n", equal(sum1, sum2, n));
 
-    print(a, n);
-    print(b, n);
     print(sum1, n);
     print(sum2, n);
 
