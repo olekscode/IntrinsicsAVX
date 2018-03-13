@@ -3,39 +3,41 @@
 */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
+#include <math.h>
 #include <immintrin.h>
+
+void printarr(double* a, size_t n);
 
 void add(double* a, double* b, double* c, size_t n)
 {
-    for (size_t i = 0; i <= n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         c[i] = a[i] + b[i];
     }
 }
 
 void addpd(double* a, double* b, double* c, size_t n)
 {
-    for (size_t i = 0; i < n; ++i) {
-        const __m256d apd = _mm256_load_pd(a);
-        const __m256d bpd = _mm256_load_pd(b);
+    for (size_t i = 0; i + 4 <= n; i += 4) {
+        const __m256d apd = _mm256_load_pd(a + i);
+        const __m256d bpd = _mm256_load_pd(b + i);
         const __m256d sum = _mm256_add_pd(apd, bpd);
-        _mm256_store_pd(c, sum);
+        _mm256_store_pd(c + i, sum);
+    }
 
-        a += 4;
-        b += 4;
-        c += 4;
+    for (size_t i = n % 4; i > 0; --i) {
+        c[n - i] = a[n - i] + b[n - i];
     }
 }
 
 void randarr(double* a, size_t n)
 {
     for (size_t i = 0; i < n; ++i) {
-        a[i] = rand() % n;
+        a[i] = rand() % 100;
     }
 }
 
-void print(double* a, size_t n)
+void printarr(double* a, size_t n)
 {
     printf("[");
 
@@ -46,10 +48,15 @@ void print(double* a, size_t n)
     printf("%f]\n", a[n - 1]);
 }
 
+int close(double a, double b)
+{
+    return fabs(a - b) < 10e-7;
+}
+
 int equal(double* a, double* b, size_t n)
 {
     for (size_t i = 0; i < n; ++i) {
-        if (a[i] != b[i]) {
+        if (!close(a[i], b[i])) {
             return 0;
         }
     }
@@ -71,9 +78,6 @@ int main(int argc, char* argv[])
     randarr(a, n);
     randarr(b, n);
 
-    print(a, n);
-    print(b, n);
-
     time_t start, end;
     float seconds;
 
@@ -90,9 +94,6 @@ int main(int argc, char* argv[])
     printf("Vectorized add: %f seconds\n", seconds);
 
     printf("%d\n", equal(sum1, sum2, n));
-
-    print(sum1, n);
-    print(sum2, n);
 
     return 0;
 }
