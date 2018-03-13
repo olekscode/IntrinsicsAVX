@@ -63,37 +63,59 @@ int equal(double* a, double* b, size_t n)
     return 1;
 }
 
+void to_csv(int* col1, double* col2, double* col3, int n)
+{
+    FILE* fp = fopen("results.csv", "w");
+
+    for (size_t i = 0; i < n; ++i) {
+        fprintf(fp, "%d, %f, %f\n", col1[i], col2[i], col3[i]);
+    }
+
+    fclose(fp);
+}
+
 int main(int argc, char* argv[])
 {
     srand(time(NULL));
 
-    size_t n = atoi(argv[1]);
-    printf("Size of arrays: %zu\n", n);
+    size_t m = 1000;
 
-    double a[n];
-    double b[n];
-    double sum1[n];
-    double sum2[n];
+    int col1[m];
+    double col2[m];
+    double col3[m];
 
-    randarr(a, n);
-    randarr(b, n);
+    for (int i = 0; i < m; ++i) {
+        size_t n = (i + 1) * 100;
+        col1[i] = n;
 
-    time_t start, end;
-    float seconds;
+        double a[n];
+        double b[n];
+        double sum1[n];
+        double sum2[n];
 
-    start = clock();
-    add(a, b, sum1, n);
-    end = clock();
-    seconds = (float)(end - start) / CLOCKS_PER_SEC;
-    printf("Sequantial add: %f seconds\n", seconds);
+        randarr(a, n);
+        randarr(b, n);
 
-    start = clock();
-    addpd(a, b, sum2, n);
-    end = clock();
-    seconds = (float)(end - start) / CLOCKS_PER_SEC;
-    printf("Vectorized add: %f seconds\n", seconds);
+        time_t start, end;
+        float seconds;
 
-    printf("%d\n", equal(sum1, sum2, n));
+        start = clock();
+        add(a, b, sum1, n);
+        end = clock();
+        seconds = (float)(end - start) / CLOCKS_PER_SEC;
+        col2[i] = seconds;
 
+        start = clock();
+        addpd(a, b, sum2, n);
+        end = clock();
+        seconds = (float)(end - start) / CLOCKS_PER_SEC;
+        col3[i] = seconds;
+
+        // Otherwise it will be optimized
+        printarr(sum1, n);
+        printarr(sum2, n);
+    }
+
+    to_csv(col1, col2, col3, m);
     return 0;
 }
